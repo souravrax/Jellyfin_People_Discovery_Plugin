@@ -7,6 +7,9 @@ TestResults/
 # Node
 node_modules/
 
+# Built front-end bundle (rebuild with: npm --prefix WebUI run build)
+WebUI/dist/
+
 # OS / editors
 .DS_Store
 Thumbs.db

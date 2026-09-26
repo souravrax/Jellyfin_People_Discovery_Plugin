@@ -114,6 +114,18 @@ public static class PeoplePageTransform
                 return null;
             }
 
+            // SAFETY: fileNamePattern is matched as an UNANCHORED regex, so
+            // "index.html" also matches lazy chunks like
+            // "itemDetails-index-html.*.chunk.js" (the dots match dashes).
+            // Patching one corrupts it (11 KB JS + our tags = SyntaxError =
+            // blank page). Only the real index.html references the main
+            // bundle AND has a body close tag — chunks have neither.
+            if (!contents.Contains("main.jellyfin.bundle", StringComparison.Ordinal)
+                || !contents.Contains("</body>", StringComparison.Ordinal))
+            {
+                return contents;
+            }
+
             // Idempotent: never patch twice.
             if (contents.Contains("__JF_PEOPLE_BUNDLE__", StringComparison.Ordinal))
             {

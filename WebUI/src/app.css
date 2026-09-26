@@ -1,0 +1,23 @@
+@tailwind utilities;
+
+/* Bits Tailwind utilities can't express: hidden-attribute guard (MUI sets
+   display:block, which beats the UA [hidden] rule), plus grid density vars
+   for Jellyfin's native itemsContainer. Everything else is utilities in JSX. */
+#peoplePage [data-typemenu][hidden],
+#peoplePage [data-filterbar][hidden] {
+  display: none !important;
+}
+
+#jfPeopleGrid {
+  --jf-card-min: 145px;
+}
+
+#peoplePage.jfCompact #jfPeopleGrid {
+  --jf-card-min: 105px;
+}
+
+@media (max-width: 700px) {
+  #jfPeopleGrid {
+    --jf-card-min: 105px;
+  }
+}

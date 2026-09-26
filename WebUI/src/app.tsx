@@ -1,23 +1,35 @@
-// People browser — React UI + route handling in one self-contained bundle.
-// Built with: npm run build  (esbuild → dist/people.bundle.js, React included)
-// Ownership: this bundle owns everything about #/people. The C# plugin (or
-// JS Injector) only delivers this one file; nothing else to load or order.
+// People browser — React + TypeScript UI with route handling in one bundle.
+// Build: pnpm run build  (esbuild → dist/people.bundle.js, Tailwind → dist/people.bundle.css)
+// The C# plugin embeds + injects both files into index.html.
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { fetchPersons, personHref, personImageUrl, waitForApi } from "./api.js";
-import { GRID_ID, ROOT_ID, SEARCH_ID, SENTINEL_ID, STATUS_ID, css } from "./styles.js";
+import {
+  fetchPersons,
+  personHref,
+  personImageUrl,
+  waitForApi,
+  type PersonItem,
+} from "./api.js";
 
-// alreadyLoaded is true when a previous copy of this bundle initialised.
 const alreadyLoaded = Boolean(window.__JF_PEOPLE_BUNDLE__);
 window.__JF_PEOPLE_BUNDLE__ = true;
 
 const HASH = "#/people";
 const MOUNT_ID = "jfPeopleMount";
+const ROOT_ID = "peoplePage";
+const GRID_ID = "jfPeopleGrid";
+const SEARCH_ID = "jfPeopleSearch";
+const STATUS_ID = "jfPeopleStatus";
+const SENTINEL_ID = "jfPeopleSentinel";
 const PAGE_SIZE = 100;
-const STYLE_ID = "jfPeopleNativeStyle";
 
-const FILTERS = [
+interface Filter {
+  label: string;
+  value: string;
+}
+
+const FILTERS: Filter[] = [
   { label: "People", value: "" },
   { label: "Actors", value: "Actor" },
   { label: "Directors", value: "Director" },
@@ -26,24 +38,24 @@ const FILTERS = [
   { label: "Composers", value: "Composer" },
 ];
 
-const SORT_ORDERS = [
+const SORT_ORDERS: Filter[] = [
   { label: "Ascending", value: "Ascending" },
   { label: "Descending", value: "Descending" },
 ];
 
-const isPeopleRoute = () => {
+const isPeopleRoute = (): boolean => {
   const h = window.location.hash || "";
   return h === HASH || h.startsWith(HASH + "?") || h.startsWith(HASH + "/");
 };
 
-const findHost = () =>
+const findHost = (): Element | null =>
   document.querySelector(".mainAnimatedPages") ||
   document.querySelector("main") ||
   document.querySelector("[role='main']");
 
 // Jellyfin renders #fallbackPage (unknown-route page) for custom hashes
 // like #/people. Hide it while our route is active, restore otherwise.
-function updateFallback() {
+function updateFallback(): void {
   const fallbackPage = document.getElementById("fallbackPage");
   if (!fallbackPage) {
     return;
@@ -56,34 +68,35 @@ const PEOPLE_ICON_D =
 
 // Header "People" entry: clones the Favorites header link (same MUI
 // styling), relabels it, swaps in the people glyph, points at #/people.
-function addPeopleNav() {
+function addPeopleNav(): void {
   const stack = document.querySelector("header .MuiToolbar-root > .MuiStack-root");
   const favorite = [...((stack && stack.querySelectorAll("a")) || [])].find(
-    (a) => a.textContent.trim() === "Favorites"
+    (a) => (a.textContent || "").trim() === "Favorites"
   );
 
   if (!stack || !favorite) {
     return;
   }
 
-  let people = stack.querySelector("[data-custom-people]");
+  let people = stack.querySelector("[data-custom-people]") as HTMLElement | null;
   if (!people) {
-    people = favorite.cloneNode(true);
-    people.dataset.customPeople = "true";
-    people.href = "#/people";
+    const clone = favorite.cloneNode(true) as HTMLElement;
+    clone.dataset.customPeople = "true";
+    (clone as HTMLAnchorElement).href = "#/people";
 
-    [...people.childNodes].forEach((node) => {
+    [...clone.childNodes].forEach((node) => {
       if (node.nodeType === Node.TEXT_NODE) {
         node.textContent = "People";
       }
     });
 
-    const path = people.querySelector("svg path");
+    const path = clone.querySelector("svg path");
     if (path) {
       path.setAttribute("d", PEOPLE_ICON_D);
     }
 
-    stack.appendChild(people);
+    stack.appendChild(clone);
+    people = clone;
   }
 
   // Active state: Jellyfin can't mark an unknown route active itself.
@@ -96,17 +109,7 @@ function addPeopleNav() {
   }
 }
 
-function ensureStyles() {
-  if (document.getElementById(STYLE_ID)) {
-    return;
-  }
-  const s = document.createElement("style");
-  s.id = STYLE_ID;
-  s.textContent = css;
-  document.head.appendChild(s);
-}
-
-function PersonCard({ person }) {
+function PersonCard({ person }: { person: PersonItem }) {
   const name = person.Name || "Unknown";
   const url = person.Id ? personImageUrl(person) : "";
   const initial = String(name).trim().charAt(0).toUpperCase() || "?";
@@ -161,25 +164,25 @@ function PersonCard({ person }) {
 }
 
 function App() {
-  const [active, setActive] = useState(isPeopleRoute());
-  const [input, setInput] = useState("");
-  const [query, setQuery] = useState("");
-  const [personType, setPersonType] = useState("");
-  const [sortOrder, setSortOrder] = useState("Ascending");
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [compact, setCompact] = useState(false);
-  const [filterOpen, setFilterOpen] = useState(true);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [items, setItems] = useState([]);
-  const [total, setTotal] = useState(null);
-  const [exhausted, setExhausted] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [active, setActive] = useState<boolean>(isPeopleRoute());
+  const [input, setInput] = useState<string>("");
+  const [query, setQuery] = useState<string>("");
+  const [personType, setPersonType] = useState<string>("");
+  const [sortOrder, setSortOrder] = useState<string>("Ascending");
+  const [isFavorite, setIsFavorite] = useState<boolean>(false);
+  const [compact, setCompact] = useState<boolean>(false);
+  const [filterOpen, setFilterOpen] = useState<boolean>(true);
+  const [menuOpen, setMenuOpen] = useState<boolean>(false);
+  const [items, setItems] = useState<PersonItem[]>([]);
+  const [total, setTotal] = useState<number | null>(null);
+  const [exhausted, setExhausted] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
 
-  const genRef = useRef(0);
-  const sentinelRef = useRef(null);
-  const loadingRef = useRef(false);
-  const exhaustedRef = useRef(false);
+  const genRef = useRef<number>(0);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const loadingRef = useRef<boolean>(false);
+  const exhaustedRef = useRef<boolean>(false);
   const filterRef = useRef({ query, personType, sortOrder, isFavorite });
   filterRef.current = { query, personType, sortOrder, isFavorite };
   loadingRef.current = loading;
@@ -213,7 +216,14 @@ function App() {
           return;
         }
         const f = filterRef.current;
-        const res = await fetchPersons({ startIndex: 0, limit: PAGE_SIZE, ...f });
+        const res = await fetchPersons({
+          startIndex: 0,
+          limit: PAGE_SIZE,
+          searchTerm: f.query,
+          personType: f.personType,
+          sortOrder: f.sortOrder,
+          isFavorite: f.isFavorite,
+        });
         if (cancelled || gen !== genRef.current) {
           return;
         }
@@ -228,7 +238,7 @@ function App() {
         setExhausted(done);
       } catch (e) {
         if (!cancelled && gen === genRef.current) {
-          setError(e?.message || String(e));
+          setError(e instanceof Error ? e.message : String(e));
         }
       } finally {
         if (!cancelled && gen === genRef.current) {
@@ -275,7 +285,7 @@ function App() {
       });
     } catch (e) {
       if (gen === genRef.current) {
-        setError(e?.message || String(e));
+        setError(e instanceof Error ? e.message : String(e));
       }
     } finally {
       if (gen === genRef.current) {
@@ -307,24 +317,28 @@ function App() {
 
   // Route handling: hide natives on #/people, restore everywhere else.
   useEffect(() => {
-    const natives = (host) =>
+    const natives = (host: Element | null): Element[] =>
       !host
         ? []
-        : [...host.children].filter((n) => n.nodeType === 1 && n.id !== ROOT_ID && n.id !== MOUNT_ID);
-    const hideNatives = (host) =>
+        : [...host.children].filter(
+            (n) => n.nodeType === 1 && (n as HTMLElement).id !== ROOT_ID && (n as HTMLElement).id !== MOUNT_ID
+          );
+    const hideNatives = (host: Element | null): void =>
       natives(host).forEach((n) => {
-        if (!n.hasAttribute("data-jf-orig")) {
-          n.setAttribute("data-jf-orig", n.style.display || "");
+        const el = n as HTMLElement;
+        if (!el.hasAttribute("data-jf-orig")) {
+          el.setAttribute("data-jf-orig", el.style.display || "");
         }
-        n.style.display = "none";
+        el.style.display = "none";
       });
-    const showAllNatives = () =>
+    const showAllNatives = (): void =>
       document.querySelectorAll("[data-jf-orig]").forEach((n) => {
-        n.style.display = n.getAttribute("data-jf-orig") || "";
-        n.removeAttribute("data-jf-orig");
+        const el = n as HTMLElement;
+        el.style.display = el.getAttribute("data-jf-orig") || "";
+        el.removeAttribute("data-jf-orig");
       });
 
-    const handleRoute = () => {
+    const handleRoute = (): void => {
       updateFallback();
       if (isPeopleRoute()) {
         const host = findHost();
@@ -347,10 +361,10 @@ function App() {
     window.addEventListener("popstate", handleRoute);
     window.addEventListener("pageshow", handleRoute);
     document.addEventListener("viewshow", handleRoute, true);
-    let t = null;
-    const sync = () => {
+    let t: number | undefined;
+    const sync = (): void => {
       clearTimeout(t);
-      t = setTimeout(handleRoute, 50);
+      t = window.setTimeout(handleRoute, 50);
     };
     const ob = new MutationObserver(sync);
     ob.observe(document.documentElement, { childList: true, subtree: true });
@@ -370,8 +384,8 @@ function App() {
     if (!menuOpen) {
       return;
     }
-    const close = (e) => {
-      if (!e.target.closest("[data-typemenu],[data-titlebtn]")) {
+    const close = (e: MouseEvent): void => {
+      if (!(e.target as HTMLElement).closest("[data-typemenu],[data-titlebtn]")) {
         setMenuOpen(false);
       }
     };
@@ -388,20 +402,20 @@ function App() {
   const range = typeof total === "number" ? `${total === 0 ? 0 : 1}-${end} of ${total}` : "…";
   const filterActive = Boolean(personType || query || isFavorite);
 
-  const setType = (v) => {
+  const setType = (v: string): void => {
     setMenuOpen(false);
     setPersonType((p) => (p === v ? p : v));
   };
-  const toggleSort = () => {
+  const toggleSort = (): void => {
     setSortOrder((s) => (s === "Ascending" ? "Descending" : "Ascending"));
   };
 
   return (
-    <div id={ROOT_ID} data-role="page" className={`page mainAnimatedPage libraryPage pageWithAbsoluteTabs withTabs${compact ? " jfCompact" : ""}`} data-backbutton="true">
+    <div id={ROOT_ID} data-role="page" className="bg-ink font-sans text-[#f5f5f5] min-h-screen page mainAnimatedPage libraryPage pageWithAbsoluteTabs withTabs" data-backbutton="true">
       <div className="padded-bottom-page MuiBox-root css-0">
-        <div className="MuiToolbar-root MuiToolbar-gutters MuiToolbar-dense padded-left padded-right css-133e01t" data-toolbar="">
+        <div className="sticky top-0 z-50 flex flex-wrap items-center gap-3.5 bg-[rgba(20,20,20,.96)] border-b border-white/10 px-4 py-2.5 MuiToolbar-root MuiToolbar-gutters MuiToolbar-dense padded-left padded-right css-133e01t" data-toolbar="">
           <button
-            className="MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textInherit MuiButton-sizeLarge MuiButton-textSizeLarge MuiButton-colorInherit css-iqm7ky"
+            className="flex items-center gap-1.5 rounded-md px-1.5 py-1 text-[1.55rem] font-extrabold tracking-wide text-white hover:bg-white/10 max-md:text-xl MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textInherit MuiButton-sizeLarge MuiButton-textSizeLarge MuiButton-colorInherit css-iqm7ky"
             type="button" aria-controls="jf-people-type-menu" aria-haspopup="true"
             data-titlebtn="" onClick={(e) => { e.stopPropagation(); setMenuOpen((o) => !o); }}
           >
@@ -409,42 +423,42 @@ function App() {
               {current.value ? current.label : "People"}
             </span>
             <span className="MuiButton-icon MuiButton-endIcon MuiButton-iconSizeLarge css-19oo937">
-              <svg className="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-iguwhy" focusable="false" aria-hidden="true" viewBox="0 0 24 24" data-testid="ArrowDropDownIcon">
+              <svg className="h-6 w-6 fill-netflix MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-iguwhy" focusable="false" aria-hidden="true" viewBox="0 0 24 24" data-testid="ArrowDropDownIcon">
                 <path d="m7 10 5 5 5-5z"></path>
               </svg>
             </span>
           </button>
           <div className="MuiBox-root css-179zilw">
             <div className="MuiChip-root MuiChip-filled MuiChip-sizeMedium MuiChip-colorDefault MuiChip-filledDefault css-1so75cn">
-              <span className="MuiChip-label MuiChip-labelMedium css-14vsv3w" data-range="">
+              <span className="inline-block whitespace-nowrap rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-[#ddd] MuiChip-label MuiChip-labelMedium css-14vsv3w" data-range="">
                 {range}
               </span>
             </div>
           </div>
-          <div className="MuiStack-root css-174l32b">
-            <div role="group" className="MuiButtonGroup-root MuiButtonGroup-text MuiButtonGroup-horizontal MuiButtonGroup-colorInherit css-boo9v6">
-              <button className="MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textInherit MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorInherit MuiButtonGroup-firstButton css-1f20jcn" type="button" title="Filter" data-act="filter" onClick={() => setFilterOpen((o) => !o)}>
+          <div className="ml-auto flex flex-wrap items-center gap-3.5 MuiStack-root css-174l32b">
+            <div role="group" className="flex items-center gap-0.5 rounded-lg border border-white/10 bg-white/5 p-0.5 MuiButtonGroup-root MuiButtonGroup-text MuiButtonGroup-horizontal MuiButtonGroup-colorInherit css-boo9v6">
+              <button className="inline-flex h-10 w-10 items-center justify-center rounded-md text-[#e8e8e8] hover:bg-white/10 hover:text-white MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textInherit MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorInherit MuiButtonGroup-firstButton css-1f20jcn" type="button" title="Filter" data-act="filter" onClick={() => setFilterOpen((o) => !o)}>
                 <span className="MuiBadge-root css-chz7cr">
-                  <svg className="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-iguwhy" focusable="false" aria-hidden="true" viewBox="0 0 24 24" data-testid="FilterAltIcon">
+                  <svg className="h-[1.35rem] w-[1.35rem] fill-current MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-iguwhy" focusable="false" aria-hidden="true" viewBox="0 0 24 24" data-testid="FilterAltIcon">
                     <path d="M4.25 5.61C6.27 8.2 10 13 10 13v6c0 .55.45 1 1 1h2c.55 0 1-.45 1-1v-6s3.72-4.8 5.74-7.39c.51-.66.04-1.61-.79-1.61H5.04c-.83 0-1.3.95-.79 1.61"></path>
                   </svg>
-                  <span className={`MuiBadge-badge MuiBadge-dot MuiBadge-anchorOriginTopRight MuiBadge-overlapRectangular MuiBadge-colorInfo css-1umg760${filterActive ? "" : " MuiBadge-invisible"}`} data-filterdot=""></span>
+                  <span className={`ml-0.5 h-2 w-2 rounded-full bg-netflix MuiBadge-badge MuiBadge-dot MuiBadge-anchorOriginTopRight MuiBadge-overlapRectangular MuiBadge-colorInfo css-1umg760${filterActive ? "" : " MuiBadge-invisible"}`} data-filterdot=""></span>
                 </span>
               </button>
-              <button className="MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textInherit MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorInherit MuiButtonGroup-middleButton css-1f20jcn" type="button" title="Sort" data-act="sort" onClick={toggleSort}>
-                <svg className="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-iguwhy" focusable="false" aria-hidden="true" viewBox="0 0 24 24" data-testid="SortByAlphaIcon">
+              <button className="inline-flex h-10 w-10 items-center justify-center rounded-md text-[#e8e8e8] hover:bg-white/10 hover:text-white MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textInherit MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorInherit MuiButtonGroup-middleButton css-1f20jcn" type="button" title="Sort" data-act="sort" onClick={toggleSort}>
+                <svg className="h-[1.35rem] w-[1.35rem] fill-current MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-iguwhy" focusable="false" aria-hidden="true" viewBox="0 0 24 24" data-testid="SortByAlphaIcon">
                   <path d="M14.94 4.66h-4.72l2.36-2.36zm-4.69 14.71h4.66l-2.33 2.33zM6.1 6.27 1.6 17.73h1.84l.92-2.45h5.11l.92 2.45h1.84L7.74 6.27zm-1.13 7.37 1.94-5.18 1.94 5.18zm10.76 2.5h6.12v1.59h-8.53v-1.29l5.92-8.56h-5.88v-1.6h8.3v1.26z"></path>
                 </svg>
               </button>
-              <button className="MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textInherit MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorInherit MuiButtonGroup-lastButton css-1f20jcn" type="button" title="View settings" data-act="view" onClick={() => setCompact((c) => !c)}>
-                <svg className="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-iguwhy" focusable="false" aria-hidden="true" viewBox="0 0 24 24" data-testid="ViewModuleIcon">
+              <button className="inline-flex h-10 w-10 items-center justify-center rounded-md text-[#e8e8e8] hover:bg-white/10 hover:text-white MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textInherit MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorInherit MuiButtonGroup-lastButton css-1f20jcn" type="button" title="View settings" data-act="view" onClick={() => setCompact((c) => !c)}>
+                <svg className="h-[1.35rem] w-[1.35rem] fill-current MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-iguwhy" focusable="false" aria-hidden="true" viewBox="0 0 24 24" data-testid="ViewModuleIcon">
                   <path d="M14.67 5v6.5H9.33V5zm1 6.5H21V5h-5.33zm-1 7.5v-6.5H9.33V19zm1-6.5V19H21v-6.5zm-7.34 0H3V19h5.33zm0-1V5H3v6.5z"></path>
                 </svg>
               </button>
             </div>
-            <div role="group" className="MuiButtonGroup-root MuiButtonGroup-text MuiButtonGroup-horizontal MuiButtonGroup-colorInherit css-boo9v6">
+            <div role="group" className="flex items-center gap-0.5 rounded-lg border border-white/10 bg-white/5 p-0.5 MuiButtonGroup-root MuiButtonGroup-text MuiButtonGroup-horizontal MuiButtonGroup-colorInherit css-boo9v6">
               <button
-                className="MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textInherit MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorInherit MuiButtonGroup-firstButton css-1f20jcn"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-md text-[#e8e8e8] hover:bg-white/10 hover:text-white disabled:opacity-30 MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textInherit MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorInherit MuiButtonGroup-firstButton css-1f20jcn"
                 type="button" title="Previous" data-act="prev"
                 disabled={items.length <= PAGE_SIZE}
                 onClick={() => {
@@ -452,39 +466,40 @@ function App() {
                   setItems([]); setTotal(null); setExhausted(false); setError("");
                 }}
               >
-                <svg className="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-iguwhy" focusable="false" aria-hidden="true" viewBox="0 0 24 24" data-testid="NavigateBeforeIcon">
+                <svg className="h-[1.35rem] w-[1.35rem] fill-current MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-iguwhy" focusable="false" aria-hidden="true" viewBox="0 0 24 24" data-testid="NavigateBeforeIcon">
                   <path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"></path>
                 </svg>
               </button>
               <button
-                className="MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textInherit MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorInherit MuiButtonGroup-lastButton css-1f20jcn"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-md text-[#e8e8e8] hover:bg-white/10 hover:text-white disabled:opacity-30 MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textInherit MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-colorInherit MuiButtonGroup-lastButton css-1f20jcn"
                 type="button" title="Next" data-act="next"
                 disabled={exhausted}
                 onClick={loadMore}
               >
-                <svg className="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-iguwhy" focusable="false" aria-hidden="true" viewBox="0 0 24 24" data-testid="NavigateNextIcon">
+                <svg className="h-[1.35rem] w-[1.35rem] fill-current MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-iguwhy" focusable="false" aria-hidden="true" viewBox="0 0 24 24" data-testid="NavigateNextIcon">
                   <path d="M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path>
                 </svg>
               </button>
             </div>
           </div>
-          <div className="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation8 css-1l7bsgz" id="jf-people-type-menu" data-typemenu="" hidden={!menuOpen}>
+          <div className="absolute left-4 top-[calc(100%+.3rem)] z-[1300] min-w-52 rounded-xl border border-white/10 bg-[#1f1f1f] p-1.5 shadow-2xl MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation8 css-1l7bsgz" id="jf-people-type-menu" data-typemenu="" hidden={!menuOpen}>
             {FILTERS.map((f) => (
-              <button key={f.label} type="button" role="menuitem" data-value={f.value} data-on={String(f.value === personType)} onClick={() => setType(f.value)}>
+              <button key={f.label} type="button" role="menuitem" data-value={f.value} data-on={String(f.value === personType)} onClick={() => setType(f.value)}
+                className="flex w-full rounded-md px-3 py-2.5 text-left text-sm text-[#eee] hover:bg-white/10 data-[on=true]:bg-netflix/20 data-[on=true]:font-bold">
                 {f.label}
               </button>
             ))}
           </div>
         </div>
-        <div className="libraryViewNav secondaryNav">
+        <div className="libraryViewNav secondaryNav px-4 pt-1.5">
           <div className="libraryViewNavInner">
             <div className="emby-tabs">
-              <div className="emby-tabs-slider" data-tabrow="">
+              <div className="flex gap-1 overflow-x-auto pb-0.5 emby-tabs-slider" data-tabrow="">
                 {FILTERS.map((f) => (
                   <button
                     key={f.label} type="button" data-value={f.value}
-                    aria-selected={String(f.value === personType)}
-                    className={`emby-tab-button${f.value === personType ? " emby-tab-button-active" : ""}`}
+                    aria-selected={f.value === personType}
+                    className={`whitespace-nowrap border-b-[3px] border-transparent px-3.5 py-2.5 text-sm font-semibold hover:text-white emby-tab-button${f.value === personType ? " !border-netflix !text-white" : " text-[#b3b3b3]"}`}
                     onClick={() => setType(f.value)}
                   >
                     {f.label}
@@ -494,18 +509,18 @@ function App() {
             </div>
           </div>
         </div>
-        <div className="jfPeopleHead" data-filterbar="" hidden={!filterOpen}>
-          <div className="jfPeopleRow">
+        <div className="px-4 pt-1.5 jfPeopleHead" data-filterbar="" hidden={!filterOpen}>
+          <div className="my-3 flex flex-wrap items-center gap-2.5 jfPeopleRow">
             <input
-              id={SEARCH_ID} className="emby-input" type="search"
+              id={SEARCH_ID} className="max-w-md grow basis-64 rounded-md border border-[#4d4d4d] bg-[#333] px-3.5 py-2.5 text-sm text-white outline-none placeholder:text-[#8c8c8c] focus:border-netflix focus:ring-2 focus:ring-netflix/35 emby-input" type="search"
               placeholder="Search people" autoComplete="off" aria-label="Search people"
               value={input} onChange={(e) => setInput(e.target.value)}
             />
           </div>
-          <div className="jfPeopleRow jfFilterBar">
-            <span className="jfFilterField">
-              <label htmlFor="jfSortOrder">Sort</label>
-              <select id="jfSortOrder" className="emby-select" value={sortOrder} onChange={(e) => setSortOrder(e.target.value)}>
+          <div className="my-3 flex flex-wrap items-center gap-2.5 jfPeopleRow jfFilterBar">
+            <span className="flex items-center gap-2 jfFilterField">
+              <label htmlFor="jfSortOrder" className="text-xs font-semibold text-[#b3b3b3]">Sort</label>
+              <select id="jfSortOrder" className="min-w-36 cursor-pointer rounded-md border border-[#4d4d4d] bg-[#333] px-3 py-2 text-sm text-white emby-select" value={sortOrder} onChange={(e) => setSortOrder(e.target.value)}>
                 {SORT_ORDERS.map((o) => (
                   <option key={o.value} value={o.value}>
                     {o.label}
@@ -513,19 +528,19 @@ function App() {
                 ))}
               </select>
             </span>
-            <span className="jfFilterField">
-              <label className="checkboxContainer">
-                <input type="checkbox" className="emby-checkbox" checked={isFavorite} onChange={(e) => setIsFavorite(e.target.checked)} />
+            <span className="flex items-center gap-2 jfFilterField">
+              <label className="flex cursor-pointer items-center gap-2 text-sm text-[#ddd] checkboxContainer">
+                <input type="checkbox" className="h-[1.1rem] w-[1.1rem] cursor-pointer accent-netflix emby-checkbox" checked={isFavorite} onChange={(e) => setIsFavorite(e.target.checked)} />
                 <span className="checkboxLabel">Favorites only</span>
               </label>
             </span>
           </div>
-          <div className="jfPeopleRow jfTypeRow" role="group" aria-label="Person type">
+          <div className="my-3 flex flex-wrap items-center gap-2.5 jfPeopleRow jfTypeRow" role="group" aria-label="Person type">
             {FILTERS.map((f) => (
               <button
                 key={f.label} type="button" data-value={f.value}
-                aria-pressed={String(f.value === personType)}
-                className={`MuiButtonBase-root MuiToggleButton-root MuiToggleButton-sizeSmall MuiToggleButton-primary css-eee7z4${f.value === personType ? " Mui-selected" : ""}`}
+                aria-pressed={f.value === personType}
+                className={`rounded-full px-4 py-2 text-xs font-bold active:scale-95 MuiButtonBase-root MuiToggleButton-root MuiToggleButton-sizeSmall MuiToggleButton-primary css-eee7z4${f.value === personType ? " border-netflix bg-netflix text-white" : " border-white/20 bg-white/10 text-[#e8e8e8] hover:bg-white/20 hover:text-white"}`}
                 onClick={() => setType(f.value)}
               >
                 {f.label}
@@ -543,13 +558,13 @@ function App() {
             items.map((p) => <PersonCard key={`${p.Id}-${p.PersonType || ""}`} person={p} />)
           )}
         </div>
-        <div id={STATUS_ID}>
+        <div id={STATUS_ID} className="px-4 py-10 text-center text-[#b3b3b3]">
           {loading ? "Loading…" : ""}
           {error ? (
             <>
               Failed to load: {error}{" "}
               <button
-                className="emby-button" id="jfRetry" type="button"
+                className="mt-4 rounded-md bg-netflix px-6 py-2.5 font-bold text-white hover:bg-[#f6121d] emby-button" id="jfRetry" type="button"
                 onClick={() => {
                   genRef.current++;
                   setItems([]); setTotal(null); setExhausted(false); setError("");
@@ -560,16 +575,15 @@ function App() {
             </>
           ) : null}
         </div>
-        <div id={SENTINEL_ID} ref={sentinelRef}></div>
+        <div id={SENTINEL_ID} ref={sentinelRef} className="h-px w-full"></div>
       </div>
     </div>
   );
 }
 
 // Bootstrap: create the mount node under Jellyfin's content host and render.
-function bootstrap() {
-  ensureStyles();
-  const mountInto = (host) => {
+function bootstrap(): void {
+  const mountInto = (host: Element): void => {
     let mount = document.getElementById(MOUNT_ID);
     if (!mount) {
       mount = document.createElement("div");

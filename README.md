@@ -6,7 +6,7 @@ order, favorites-only, count chip, prev/next paging, infinite scroll, a
 header **People** nav entry, and automatic hiding of Jellyfin's fallback page
 for the custom route.
 
-It works by inlining one self-contained script into the served
+It works by inlining one self-contained script + stylesheet into the served
 `index.html` via the **File Transformation** plugin — every browser using
 jellyfin-web gets it, no JS Injector or userscripts needed.
 
@@ -18,8 +18,8 @@ JellyfinPeopleDiscoveryPlugin/
 ├── Plugin.cs                        # plugin metadata (Name/GUID/description)
 ├── FileTransformation.cs            # index.html patch + registration retry loop
 ├── Configuration/PluginConfiguration.cs
-├── WebUI/src/                       # React 18 UI (app.jsx, api.js, styles.js)
-├── WebUI/dist/people.bundle.js      # built bundle (git-ignored, ~160 KB)
+├── WebUI/src/                       # React 18 + TypeScript UI (app.tsx, api.ts, app.css)
+├── WebUI/dist/                      # built bundle (git-ignored): people.bundle.js + .css
 └── Web/                             # fallback scripts (used only if dist/ is missing)
     ├── jf-people-page.js
     └── jf-people-route.js
@@ -30,16 +30,20 @@ JellyfinPeopleDiscoveryPlugin/
 1. Jellyfin server 12 (`JellyfinVersion` in the `.csproj` tracks Dashboard > About).
 2. **File Transformation** plugin installed
    (https://github.com/IAmParadox27/jellyfin-plugin-file-transformation).
-3. Node 24 + npm 11 to rebuild the React bundle.
+3. Node 24 + pnpm 10 to rebuild the front end (TypeScript + Tailwind v3).
 4. .NET 10 SDK to rebuild the DLL.
+
+Styling: Tailwind utilities scoped under `#peoplePage` (`important` selector,
+preflight disabled so Jellyfin's own CSS is untouched). Run `pnpm run
+typecheck` for the TS check.
 
 ## Build
 
 ```powershell
 # 1. Front end
 cd WebUI
-npm install
-npm run build   # → dist\people.bundle.js (npm run watch for dev)
+pnpm install
+pnpm run build   # → dist\people.bundle.js + dist\people.bundle.css (pnpm run watch for dev)
 
 # 2. Plugin (from the project root)
 cd ..
@@ -65,10 +69,11 @@ Server log should show:
 
 ## Updating the injected JS without rebuilding the DLL
 
-Drop edited copies here (bundle wins if present, else the two scripts):
+Drop edited copies here (bundle + CSS win if present, else the two scripts):
 
 ```text
 <jellyfin-data>/plugins-data/People Discovery/people.bundle.js
+<jellyfin-data>/plugins-data/People Discovery/people.bundle.css
 <jellyfin-data>/plugins-data/People Discovery/jf-people-page.js
 <jellyfin-data>/plugins-data/People Discovery/jf-people-route.js
 ```

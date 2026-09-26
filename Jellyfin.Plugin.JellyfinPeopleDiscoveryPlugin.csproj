@@ -34,6 +34,7 @@
   -->
   <ItemGroup>
     <EmbeddedResource Include="WebUI\dist\people.bundle.js" Link="Web\people.bundle.js" Condition="Exists('WebUI\dist\people.bundle.js')" />
+    <EmbeddedResource Include="WebUI\dist\people.bundle.css" Link="Web\people.bundle.css" Condition="Exists('WebUI\dist\people.bundle.css')" />
     <EmbeddedResource Include="Web\jf-people-page.js" />
     <EmbeddedResource Include="Web\jf-people-route.js" />
   </ItemGroup>

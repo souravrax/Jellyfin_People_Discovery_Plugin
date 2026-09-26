@@ -96,6 +96,7 @@ public static class StartupRegistration
 public static class PeoplePageTransform
 {
     private const string BundleResource = "people.bundle.js";
+    private const string BundleCssResource = "people.bundle.css";
     private const string PageResource = "jf-people-page.js";
     private const string RouteResource = "jf-people-route.js";
 
@@ -122,14 +123,18 @@ public static class PeoplePageTransform
                 return contents;
             }
 
-            // Prefer the React bundle; fall back to the hand-written scripts
-            // (also covers checkouts where WebUI/ was never built).
+            // Prefer the React + Tailwind bundle; fall back to the hand-written
+            // scripts (also covers checkouts where WebUI/ was never built).
             var bundle = LoadScript(BundleResource);
             string tags;
             if (!string.IsNullOrEmpty(bundle))
             {
                 bundle = bundle.Replace("</script", "<\\/script", StringComparison.Ordinal);
-                tags = "<script>" + bundle + "</script>\n</body>";
+                var css = LoadScript(BundleCssResource);
+                var style = string.IsNullOrEmpty(css)
+                    ? string.Empty
+                    : "<style>" + css.Replace("</style", "<\\/style", StringComparison.Ordinal) + "</style>\n";
+                tags = style + "<script>" + bundle + "</script>\n</body>";
             }
             else
             {

@@ -4,6 +4,11 @@
   --font-sans: Inter, "Netflix Sans", "Helvetica Neue", Arial, sans-serif;
 }
 
+/* Default theme VALUES only (no styles, no reset): spacing, radius,
+   font-size/weight scales and keyframes that utilities reference.
+   :root variables alone cannot restyle anything. */
+@import "tailwindcss/theme.css";
+
 /* All utilities scoped under our root so nothing can restyle Jellyfin.
    No preflight import: Jellyfin's own reset stays untouched. */
 #peoplePage {

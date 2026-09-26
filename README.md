@@ -19,7 +19,7 @@ JellyfinPeopleDiscoveryPlugin/
 ├── FileTransformation.cs            # index.html patch + registration retry loop
 ├── Configuration/PluginConfiguration.cs
 ├── WebUI/src/                       # React 18 UI (app.jsx, api.js, styles.js)
-├── WebUI/dist/people.bundle.js      # built bundle (committed, ~160 KB)
+├── WebUI/dist/people.bundle.js      # built bundle (git-ignored, ~160 KB)
 └── Web/                             # fallback scripts (used only if dist/ is missing)
     ├── jf-people-page.js
     └── jf-people-route.js

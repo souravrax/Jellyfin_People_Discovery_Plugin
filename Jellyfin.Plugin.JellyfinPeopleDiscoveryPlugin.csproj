@@ -26,17 +26,13 @@
   </ItemGroup>
 
   <!--
-    Browser UI: the React bundle built from WebUI/ (`npm run build`).
-    dist/ is committed so the DLL builds straight from git. If dist/ is
-    ever missing, the Exists() guard skips it and the plugin falls back
-    to the hand-written scripts in Web/, which stay embedded too so
-    injection never silently stops working.
+    Browser UI: the React + Tailwind bundle built from WebUI/
+    (`pnpm run build`). dist/ is git-ignored, so a fresh checkout must
+    build WebUI first — the DLL embeds whatever dist/ contains.
   -->
   <ItemGroup>
-    <EmbeddedResource Include="WebUI\dist\people.bundle.js" Link="Web\people.bundle.js" Condition="Exists('WebUI\dist\people.bundle.js')" />
-    <EmbeddedResource Include="WebUI\dist\people.bundle.css" Link="Web\people.bundle.css" Condition="Exists('WebUI\dist\people.bundle.css')" />
-    <EmbeddedResource Include="Web\jf-people-page.js" />
-    <EmbeddedResource Include="Web\jf-people-route.js" />
+    <EmbeddedResource Include="WebUI\dist\people.bundle.js" Link="Web\people.bundle.js" />
+    <EmbeddedResource Include="WebUI\dist\people.bundle.css" Link="Web\people.bundle.css" />
   </ItemGroup>
 
 </Project>

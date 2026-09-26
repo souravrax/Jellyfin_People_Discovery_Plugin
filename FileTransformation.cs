@@ -97,8 +97,6 @@ public static class PeoplePageTransform
 {
     private const string BundleResource = "people.bundle.js";
     private const string BundleCssResource = "people.bundle.css";
-    private const string PageResource = "jf-people-page.js";
-    private const string RouteResource = "jf-people-route.js";
 
     /// <summary>
     /// MUST return the raw new file contents as a string (or null to leave
@@ -116,42 +114,26 @@ public static class PeoplePageTransform
                 return null;
             }
 
-            // Idempotent: never patch twice (bundle or legacy scripts).
-            if (contents.Contains("__JF_PEOPLE_BUNDLE__", StringComparison.Ordinal)
-                || contents.Contains("jf-people-route", StringComparison.Ordinal))
+            // Idempotent: never patch twice.
+            if (contents.Contains("__JF_PEOPLE_BUNDLE__", StringComparison.Ordinal))
             {
                 return contents;
             }
 
-            // Prefer the React + Tailwind bundle; fall back to the hand-written
-            // scripts (also covers checkouts where WebUI/ was never built).
+            // Single implementation: the React + Tailwind bundle. Without it
+            // there is nothing to inject — leave the file untouched.
             var bundle = LoadScript(BundleResource);
-            string tags;
-            if (!string.IsNullOrEmpty(bundle))
+            if (string.IsNullOrEmpty(bundle))
             {
-                bundle = bundle.Replace("</script", "<\\/script", StringComparison.Ordinal);
-                var css = LoadScript(BundleCssResource);
-                var style = string.IsNullOrEmpty(css)
-                    ? string.Empty
-                    : "<style>" + css.Replace("</style", "<\\/style", StringComparison.Ordinal) + "</style>\n";
-                tags = style + "<script>" + bundle + "</script>\n</body>";
+                return contents;
             }
-            else
-            {
-                var page = LoadScript(PageResource);
-                var route = LoadScript(RouteResource);
-                if (string.IsNullOrEmpty(page) || string.IsNullOrEmpty(route))
-                {
-                    return contents;
-                }
 
-                // Guard against premature </script> termination if our JS ever
-                // contains that literal (identical runtime string value).
-                page = page.Replace("</script", "<\\/script", StringComparison.Ordinal);
-                route = route.Replace("</script", "<\\/script", StringComparison.Ordinal);
-
-                tags = "<script>" + page + "</script>\n<script>" + route + "</script>\n</body>";
-            }
+            bundle = bundle.Replace("</script", "<\\/script", StringComparison.Ordinal);
+            var css = LoadScript(BundleCssResource);
+            var style = string.IsNullOrEmpty(css)
+                ? string.Empty
+                : "<style>" + css.Replace("</style", "<\\/style", StringComparison.Ordinal) + "</style>\n";
+            var tags = style + "<script>" + bundle + "</script>\n</body>";
 
             return contents.Contains("</body>", StringComparison.Ordinal)
                 ? contents.Replace("</body>", tags, StringComparison.Ordinal)

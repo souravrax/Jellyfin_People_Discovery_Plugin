@@ -29,9 +29,6 @@ JellyfinPeopleDiscoveryPlugin/
 │   ├── components/                  # Toolbar, TypeTabs, FilterBar, PeopleGrid, ...
 │   └── app.css                      # Tailwind + a few non-utility rules
 ├── WebUI/dist/                      # built bundle (git-ignored): people.bundle.js + .css
-└── Web/                             # fallback scripts (used only if dist/ is missing)
-    ├── jf-people-page.js
-    └── jf-people-route.js
 ```
 
 ## Requirements
@@ -78,13 +75,11 @@ Server log should show:
 
 ## Updating the injected JS without rebuilding the DLL
 
-Drop edited copies here (bundle + CSS win if present, else the two scripts):
+Drop edited copies here (bundle + CSS):
 
 ```text
 <jellyfin-data>/plugins-data/People Discovery/people.bundle.js
 <jellyfin-data>/plugins-data/People Discovery/people.bundle.css
-<jellyfin-data>/plugins-data/People Discovery/jf-people-page.js
-<jellyfin-data>/plugins-data/People Discovery/jf-people-route.js
 ```
 
 They take effect on the next page load (hard-refresh the browser).

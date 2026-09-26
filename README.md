@@ -42,7 +42,10 @@ JellyfinPeopleDiscoveryPlugin/
 
 Styling: Tailwind v4, CSS-first config in `app.css` (`@theme` tokens, utilities
 nested under `#peoplePage` so nothing leaks; no preflight import so
-Jellyfin's own CSS is untouched). Run `pnpm run typecheck` for the TS check.
+Jellyfin's own CSS is untouched). UI primitives in `src/ui/` follow the
+[coss ui](https://coss.com/ui/docs) API (Button/Input/Select on Base UI) and
+use the coss dark color system from their styling guide, scoped to our page.
+Run `pnpm run typecheck` for the TS check.
 
 ## Build
 

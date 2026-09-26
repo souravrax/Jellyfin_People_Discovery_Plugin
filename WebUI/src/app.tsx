@@ -27,7 +27,7 @@ export function App() {
   }
 
   return (
-    <div id={ROOT_ID} data-role="page" className="min-h-screen bg-ink font-sans text-[#f5f5f5] page mainAnimatedPage libraryPage" data-backbutton="true">
+    <div id={ROOT_ID} data-role="page" className="min-h-screen bg-background font-sans text-foreground page mainAnimatedPage libraryPage" data-backbutton="true">
       <div className="padded-bottom-page MuiBox-root css-0">
         <PeopleHeader
           input={input}

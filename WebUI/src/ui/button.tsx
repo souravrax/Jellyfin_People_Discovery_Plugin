@@ -6,18 +6,19 @@ export type ButtonVariant = "default" | "secondary" | "outline" | "ghost";
 export type ButtonSize = "xs" | "sm" | "default" | "lg" | "icon" | "icon-sm";
 
 const variants: Record<ButtonVariant, string> = {
-  default: "bg-netflix text-white hover:bg-[#f6121d]",
-  secondary: "bg-white/10 text-[#e8e8e8] hover:bg-white/20 hover:text-white",
-  outline: "border border-white/20 bg-transparent text-[#e8e8e8] hover:bg-white/10 hover:text-white",
-  ghost: "bg-transparent text-[#b3b3b3] hover:bg-white/10 hover:text-white",
+  default: "bg-primary text-primary-foreground shadow-xs hover:bg-primary/90",
+  secondary: "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
+  outline:
+    "border border-input bg-background text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground",
+  ghost: "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
 };
 
 const sizes: Record<ButtonSize, string> = {
-  xs: "h-7 px-2.5 text-xs",
-  sm: "h-8 px-3 text-xs",
-  default: "h-10 px-4 text-sm",
-  lg: "h-11 px-6 text-sm",
-  icon: "h-10 w-10",
+  xs: "h-7 gap-1.5 px-2.5 text-xs",
+  sm: "h-8 gap-1.5 px-3 text-xs",
+  default: "h-9 gap-2 px-4 text-sm",
+  lg: "h-10 gap-2 px-6 text-sm",
+  icon: "h-9 w-9",
   "icon-sm": "h-8 w-8",
 };
 
@@ -42,7 +43,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 
 /**
  * coss-style Button (Base UI under the hood): variants, sizes, loading state.
- * Themed for our dark UI — `default` is Netflix red.
+ * Colors come from the coss dark tokens (bg-primary, bg-secondary …).
  */
 export function Button({
   variant = "default",
@@ -59,15 +60,17 @@ export function Button({
       aria-disabled={disabled || loading}
       data-loading={loading || undefined}
       className={cn(
-        "inline-flex cursor-pointer items-center justify-center gap-2 rounded-md font-semibold whitespace-nowrap transition-colors",
-        "disabled:cursor-default disabled:opacity-50",
+        "inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors outline-none",
+        "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
+        "disabled:pointer-events-none disabled:opacity-50",
+        "[&_svg]:pointer-events-none [&_svg]:shrink-0",
         variants[variant],
         sizes[size],
         className
       )}
       {...props}
     >
-      {loading ? <Spinner className="h-4 w-4" /> : null}
+      {loading ? <Spinner className="size-4" /> : null}
       <span className={loading ? "invisible" : undefined}>{children}</span>
     </BaseButton>
   );

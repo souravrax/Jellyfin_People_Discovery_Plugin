@@ -20,9 +20,9 @@ export function PeopleHeader(props: PeopleHeaderProps) {
   return (
     <div className="px-4 pb-1 pt-4">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h1 className="text-2xl font-extrabold tracking-wide text-white">People</h1>
+        <h1 className="font-heading text-2xl font-bold tracking-wide text-foreground">People</h1>
         {typeof total === "number" ? (
-          <p className="text-sm text-[#b3b3b3]">
+          <p className="text-sm text-muted-foreground">
             {total.toLocaleString()} {total === 1 ? "person" : "people"}
           </p>
         ) : null}
@@ -43,7 +43,6 @@ export function PeopleHeader(props: PeopleHeaderProps) {
           options={FILTERS}
           onChange={props.onType}
           label="Person type"
-          className="min-w-36"
         />
         <Button
           variant="secondary"

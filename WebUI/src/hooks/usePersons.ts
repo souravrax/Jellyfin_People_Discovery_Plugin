@@ -6,37 +6,41 @@ export interface PersonsFilter {
   query: string;
   personType: string;
   sortOrder: string;
+  isFavorite: boolean;
 }
 
 export interface PersonsState {
   items: PersonItem[];
   total: number | null;
-  exhausted: boolean;
   loading: boolean;
   error: string;
-  loadMore: () => void;
-  /** Clears to page 1 and reloads (filters, retry). */
+  /** 1-based current page. */
+  page: number;
+  hasPrev: boolean;
+  hasNext: boolean;
+  /** "1–100 of 1,240" (or "…" while unknown). */
+  range: string;
+  prev: () => void;
+  next: () => void;
+  /** Back to page 1 (filters) or refetch (retry). */
   reset: () => void;
 }
 
-/** Paginated /Persons loading with race guards and infinite-scroll support. */
+/**
+ * Windowed /Persons paging (limit + startIndex query params). One page is
+ * one request; changing pages replaces the list — no accumulation, so Prev
+ * always works and the range text is exact.
+ */
 export function usePersons(active: boolean, filter: PersonsFilter): PersonsState {
   const [items, setItems] = useState<PersonItem[]>([]);
   const [total, setTotal] = useState<number | null>(null);
-  const [exhausted, setExhausted] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
-  const [resetToken, setResetToken] = useState<number>(0);
+  const [page, setPage] = useState<number>(1);
+  const [attempt, setAttempt] = useState<number>(0);
 
   const genRef = useRef<number>(0);
-  const loadingRef = useRef<boolean>(false);
-  const exhaustedRef = useRef<boolean>(false);
-  const filterRef = useRef<PersonsFilter>(filter);
-  filterRef.current = filter;
-  loadingRef.current = loading;
-  exhaustedRef.current = exhausted;
 
-  // Reset + load page 1 whenever filters (or resetToken) change.
   useEffect(() => {
     if (!active) {
       return;
@@ -44,7 +48,6 @@ export function usePersons(active: boolean, filter: PersonsFilter): PersonsState
     const gen = ++genRef.current;
     setItems([]);
     setTotal(null);
-    setExhausted(false);
     setError("");
     let cancelled = false;
     (async () => {
@@ -54,26 +57,21 @@ export function usePersons(active: boolean, filter: PersonsFilter): PersonsState
         if (cancelled || gen !== genRef.current) {
           return;
         }
-        const f = filterRef.current;
         const res = await fetchPersons({
-          startIndex: 0,
+          startIndex: (page - 1) * PAGE_SIZE,
           limit: PAGE_SIZE,
-          searchTerm: f.query,
-          personType: f.personType,
-          sortOrder: f.sortOrder,
+          searchTerm: filter.query,
+          personType: filter.personType,
+          sortOrder: filter.sortOrder,
+          isFavorite: filter.isFavorite,
         });
         if (cancelled || gen !== genRef.current) {
           return;
         }
-        const list = Array.isArray(res?.Items) ? res.Items : [];
+        setItems(Array.isArray(res?.Items) ? res.Items : []);
         if (typeof res?.TotalRecordCount === "number") {
           setTotal(res.TotalRecordCount);
         }
-        setItems(list);
-        const done =
-          list.length < PAGE_SIZE ||
-          (typeof res?.TotalRecordCount === "number" && list.length >= res.TotalRecordCount);
-        setExhausted(done);
       } catch (e) {
         if (!cancelled && gen === genRef.current) {
           setError(e instanceof Error ? e.message : String(e));
@@ -88,53 +86,30 @@ export function usePersons(active: boolean, filter: PersonsFilter): PersonsState
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, resetToken, filter.query, filter.personType, filter.sortOrder]);
+  }, [active, page, attempt, filter.query, filter.personType, filter.sortOrder, filter.isFavorite]);
 
-  const loadMore = useCallback(async () => {
-    if (loadingRef.current || exhaustedRef.current) {
-      return;
-    }
-    const gen = genRef.current;
-    setLoading(true);
-    setError("");
-    try {
-      const f = filterRef.current;
-      const res = await fetchPersons({
-        startIndex: items.length,
-        limit: PAGE_SIZE,
-        searchTerm: f.query,
-        personType: f.personType,
-        sortOrder: f.sortOrder,
-      });
-      if (gen !== genRef.current) {
-        return;
-      }
-      const list = Array.isArray(res?.Items) ? res.Items : [];
-      if (typeof res?.TotalRecordCount === "number") {
-        setTotal(res.TotalRecordCount);
-      }
-      setItems((prev) => {
-        const next = prev.concat(list);
-        const done =
-          list.length < PAGE_SIZE ||
-          (typeof res?.TotalRecordCount === "number" && next.length >= res.TotalRecordCount);
-        setExhausted(done);
-        return next;
-      });
-    } catch (e) {
-      if (gen === genRef.current) {
-        setError(e instanceof Error ? e.message : String(e));
-      }
-    } finally {
-      if (gen === genRef.current) {
-        setLoading(false);
-      }
-    }
-  }, [items.length]);
-
-  const reset = useCallback(() => {
-    setResetToken((t) => t + 1);
+  const prev = useCallback(() => {
+    setPage((p) => Math.max(1, p - 1));
   }, []);
 
-  return { items, total, exhausted, loading, error, loadMore, reset };
+  const next = useCallback(() => {
+    setPage((p) => p + 1);
+  }, []);
+
+  const reset = useCallback(() => {
+    setPage(1);
+    setAttempt((a) => a + 1);
+  }, []);
+
+  const hasPrev = page > 1;
+  const hasNext =
+    typeof total === "number" ? page * PAGE_SIZE < total : items.length >= PAGE_SIZE;
+  const range =
+    typeof total === "number"
+      ? total === 0
+        ? "0 of 0"
+        : `${((page - 1) * PAGE_SIZE + 1).toLocaleString()}–${Math.min(page * PAGE_SIZE, total).toLocaleString()} of ${total.toLocaleString()}`
+      : "…";
+
+  return { items, total, loading, error, page, hasPrev, hasNext, range, prev, next, reset };
 }

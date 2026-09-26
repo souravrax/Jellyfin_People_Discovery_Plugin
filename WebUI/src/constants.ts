@@ -6,7 +6,6 @@ export const ROOT_ID = "peoplePage";
 export const GRID_ID = "jfPeopleGrid";
 export const SEARCH_ID = "jfPeopleSearch";
 export const STATUS_ID = "jfPeopleStatus";
-export const SENTINEL_ID = "jfPeopleSentinel";
 export const PAGE_SIZE = 100;
 
 export interface Filter {

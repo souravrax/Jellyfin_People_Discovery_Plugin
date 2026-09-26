@@ -1,10 +1,11 @@
 # JellyfinPeopleDiscoveryPlugin
 
-A Jellyfin 12 server plugin that adds a native-looking **people browser** at
-`#/people`: search, actor/director/writer/producer/composer filters, sort
-order, favorites-only, count chip, prev/next paging, infinite scroll, a
-header **People** nav entry, and automatic hiding of Jellyfin's fallback page
-for the custom route.
+A Jellyfin 12 server plugin that adds a **people browser** at `#/people`,
+built on the real `/Persons` query params: `searchTerm` search,
+`personTypes` filter, `isFavorite` toggle, `sortOrder` toggle, and true
+`limit` + `startIndex` paging with an exact range readout. Plus a header
+**People** nav entry and automatic hiding of Jellyfin's fallback page for
+the custom route.
 
 It works by inlining one self-contained script + stylesheet into the served
 `index.html` via the **File Transformation** plugin — every browser using

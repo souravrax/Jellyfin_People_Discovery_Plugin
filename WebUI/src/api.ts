@@ -18,7 +18,6 @@ export interface PersonsQuery {
   searchTerm: string;
   personType: string;
   sortOrder: string;
-  isFavorite: boolean;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -53,7 +52,6 @@ export async function fetchPersons(q: PersonsQuery): Promise<PersonsResult> {
     Fields: "PrimaryImageAspectRatio",
     SortBy: "SortName",
     SortOrder: q.sortOrder,
-    IsFavorite: q.isFavorite ? true : undefined,
   };
   return a.getJSON(a.getUrl("Persons", params)) as Promise<PersonsResult>;
 }

@@ -15,12 +15,10 @@ export interface Filter {
 }
 
 export const FILTERS: Filter[] = [
-  { label: "People", value: "" },
+  { label: "Everyone", value: "" },
   { label: "Actors", value: "Actor" },
   { label: "Directors", value: "Director" },
   { label: "Writers", value: "Writer" },
-  { label: "Producers", value: "Producer" },
-  { label: "Composers", value: "Composer" },
 ];
 
 export const SORT_ORDERS: Filter[] = [

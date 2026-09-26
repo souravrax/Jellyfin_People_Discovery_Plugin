@@ -6,7 +6,6 @@ export interface PersonsFilter {
   query: string;
   personType: string;
   sortOrder: string;
-  isFavorite: boolean;
 }
 
 export interface PersonsState {
@@ -16,7 +15,7 @@ export interface PersonsState {
   loading: boolean;
   error: string;
   loadMore: () => void;
-  /** Clears to page 1 and reloads (filters, retry, prev-page). */
+  /** Clears to page 1 and reloads (filters, retry). */
   reset: () => void;
 }
 
@@ -62,7 +61,6 @@ export function usePersons(active: boolean, filter: PersonsFilter): PersonsState
           searchTerm: f.query,
           personType: f.personType,
           sortOrder: f.sortOrder,
-          isFavorite: f.isFavorite,
         });
         if (cancelled || gen !== genRef.current) {
           return;
@@ -90,7 +88,7 @@ export function usePersons(active: boolean, filter: PersonsFilter): PersonsState
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, resetToken, filter.query, filter.personType, filter.sortOrder, filter.isFavorite]);
+  }, [active, resetToken, filter.query, filter.personType, filter.sortOrder]);
 
   const loadMore = useCallback(async () => {
     if (loadingRef.current || exhaustedRef.current) {
@@ -107,7 +105,6 @@ export function usePersons(active: boolean, filter: PersonsFilter): PersonsState
         searchTerm: f.query,
         personType: f.personType,
         sortOrder: f.sortOrder,
-        isFavorite: f.isFavorite,
       });
       if (gen !== genRef.current) {
         return;

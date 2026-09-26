@@ -26,8 +26,9 @@ JellyfinPeopleDiscoveryPlugin/
 │   ├── api.ts                       # typed ApiClient helpers
 │   ├── routing.ts                   # route/nav DOM integration
 │   ├── hooks/                       # useRouteSync, usePersons, useDebouncedValue
-│   ├── components/                  # Toolbar, TypeTabs, FilterBar, PeopleGrid, ...
-│   └── app.css                      # Tailwind + a few non-utility rules
+│   ├── components/                  # PeopleHeader, PeopleGrid, PersonCard, StatusBar
+│   ├── ui/                          # coss-style Button, Input, Select (Base UI) + cn
+│   └── app.css                      # Tailwind v4 + overlay/grid rules
 ├── WebUI/dist/                      # built bundle (git-ignored): people.bundle.js + .css
 ```
 

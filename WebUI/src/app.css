@@ -10,13 +10,6 @@
   @import "tailwindcss/utilities";
 }
 
-/* Bits utilities can't express. Everything scoped to OUR nodes
-   (#peoplePage, #jfPeopleMount). */
-#peoplePage [data-typemenu][hidden],
-#peoplePage [data-filterbar][hidden] {
-  display: none !important;
-}
-
 /* Body-level overlay: opaque layer below the app header, above bottom nav
    (exact top/bottom offsets are measured at runtime). Native pages are never
    hidden or modified — this layer simply covers them while active. */
@@ -36,10 +29,6 @@
 
 #jfPeopleGrid {
   --jf-card-min: 145px;
-}
-
-#peoplePage.jfCompact #jfPeopleGrid {
-  --jf-card-min: 105px;
 }
 
 @media (max-width: 700px) {

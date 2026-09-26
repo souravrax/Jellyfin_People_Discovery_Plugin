@@ -18,7 +18,16 @@ JellyfinPeopleDiscoveryPlugin/
 ├── Plugin.cs                        # plugin metadata (Name/GUID/description)
 ├── FileTransformation.cs            # index.html patch + registration retry loop
 ├── Configuration/PluginConfiguration.cs
-├── WebUI/src/                       # React 18 + TypeScript UI (app.tsx, api.ts, app.css)
+├── WebUI/src/                       # React 18 + TS UI (see below)
+│   ├── main.tsx                     # bundle entry (double-load guard)
+│   ├── bootstrap.tsx                # mount + header nav observer
+│   ├── app.tsx                      # <App/> composition only
+│   ├── constants.ts                 # ids, route, filters
+│   ├── api.ts                       # typed ApiClient helpers
+│   ├── routing.ts                   # route/nav DOM integration
+│   ├── hooks/                       # useRouteSync, usePersons, useDebouncedValue
+│   ├── components/                  # Toolbar, TypeTabs, FilterBar, PeopleGrid, ...
+│   └── app.css                      # Tailwind + a few non-utility rules
 ├── WebUI/dist/                      # built bundle (git-ignored): people.bundle.js + .css
 └── Web/                             # fallback scripts (used only if dist/ is missing)
     ├── jf-people-page.js

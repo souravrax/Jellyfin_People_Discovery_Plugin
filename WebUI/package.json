@@ -4,9 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "esbuild src/app.tsx --bundle --minify --format=iife --jsx=automatic --outfile=dist/people.bundle.js && postcss src/app.css --use tailwindcss --use autoprefixer --no-map -o dist/people.bundle.css",
+    "build": "esbuild src/main.tsx --bundle --minify --format=iife --jsx=automatic --outfile=dist/people.bundle.js && postcss src/app.css --use tailwindcss --use autoprefixer --no-map -o dist/people.bundle.css",
     "typecheck": "tsc --noEmit",
-    "watch": "esbuild src/app.tsx --bundle --format=iife --jsx=automatic --outfile=dist/people.bundle.js --watch"
+    "watch": "esbuild src/main.tsx --bundle --format=iife --jsx=automatic --outfile=dist/people.bundle.js --watch"
   },
   "dependencies": {
     "react": "^18.3.1",

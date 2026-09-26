@@ -93,6 +93,8 @@
     const s = document.createElement("style");
     s.id = STYLE_ID;
     s.textContent = `
+      #jfPeopleMount{position:fixed;left:0;right:0;z-index:1000;background:#141414;overflow-y:auto;overscroll-behavior:contain}
+      #jfPeopleMount[hidden]{display:none!important}
       #${ROOT_ID}{background:#141414;color:#f5f5f5;min-height:100vh;font-family:Inter,Netflix Sans,Helvetica Neue,Arial,sans-serif}
       #${ROOT_ID} [data-toolbar]{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:.9rem;flex-wrap:wrap;
         padding:.7rem 1.1rem;background:rgba(20,20,20,.96);border-bottom:1px solid rgba(255,255,255,.08)}

@@ -1,56 +1,68 @@
 // jf-people-route.js - requires jf-people-page.js loaded first
 // Ownership: #/people routing only. No UI, no API.
+//
+// SAFETY MODEL: we never touch Jellyfin's own nodes. Our UI lives in
+// #jfPeopleMount, a fixed overlay attached to <body>. Off-route it is a
+// single hidden node, so other pages cannot be affected by us.
 (() => {
   "use strict";
   if (window.__JF_PEOPLE_ROUTE__) return;
   window.__JF_PEOPLE_ROUTE__ = true;
 
   const HASH = "#/people"; // change to "#/peoples" if you want that URL
+  const MOUNT_ID = "jfPeopleMount";
+
   const isRoute = () => {
     const h = window.location.hash || "";
     return h === HASH || h.startsWith(HASH + "?") || h.startsWith(HASH + "/");
   };
 
-  const findHost = () => document.querySelector(".mainAnimatedPages")
-    || document.querySelector("main") || document.querySelector("[role='main']");
-
-  const natives = (host) => !host ? [] : [...host.children].filter(
-    n => n.nodeType === 1 && n.id !== window.JFPeoplePage?.rootId);
-
-  const hideNatives = (host) => natives(host).forEach(n => {
-    if (!n.hasAttribute("data-jf-orig")) n.setAttribute("data-jf-orig", n.style.display || "");
-    n.style.display = "none";
-  });
-
-  const showNatives = (host) => natives(host).forEach(n => {
-    if (n.hasAttribute("data-jf-orig")) {
-      n.style.display = n.getAttribute("data-jf-orig") || "";
-      n.removeAttribute("data-jf-orig");
+  function ensureOverlayMount() {
+    let mount = document.getElementById(MOUNT_ID);
+    if (!mount) {
+      mount = document.createElement("div");
+      mount.id = MOUNT_ID;
+      (document.body || document.documentElement).appendChild(mount);
+    } else if (mount.parentElement !== document.body && document.body) {
+      document.body.appendChild(mount);
     }
-  });
+    return mount;
+  }
 
-  const showAllNatives = () => document.querySelectorAll("[data-jf-orig]").forEach(n => {
-    n.style.display = n.getAttribute("data-jf-orig") || "";
-    n.removeAttribute("data-jf-orig");
-  });
+  function positionOverlay() {
+    const mount = document.getElementById(MOUNT_ID);
+    if (!mount) return;
+    const header = document.querySelector("header");
+    const top = header ? Math.max(0, Math.ceil(header.getBoundingClientRect().bottom)) : 0;
+    const bottomNav = document.querySelector(".MuiBottomNavigation-root");
+    const bottom = bottomNav
+      ? Math.max(0, Math.ceil(window.innerHeight - bottomNav.getBoundingClientRect().top))
+      : 0;
+    mount.style.top = `${top}px`;
+    mount.style.bottom = `${bottom}px`;
+  }
+
+  function setOverlayVisible(on) {
+    const mount = ensureOverlayMount();
+    if (on) {
+      positionOverlay();
+      mount.hidden = false;
+    } else {
+      mount.hidden = true;
+    }
+  }
 
   async function handleRoute() {
     if (!window.JFPeoplePage) return; // page script not ready yet
     try {
       updateFallback();
-      // Always hide first when leaving #/people, even if host is missing.
-      // Jellyfin in-app navigation doesn't reliably fire hashchange alone.
-      if (!isRoute()) {
+      const on = isRoute();
+      setOverlayVisible(on);
+      if (!on) {
         window.JFPeoplePage.unmount();
-        showAllNatives();
-        const host = findHost();
-        if (host) showNatives(host);
         return;
       }
-      const host = findHost();
-      if (!host) return;
-      hideNatives(host);
-      await window.JFPeoplePage.mount(host);
+      await window.JFPeoplePage.mount(ensureOverlayMount());
     } catch (e) { console.error("[PeopleRoute]", e); }
   }
 
@@ -111,6 +123,7 @@
   window.addEventListener("hashchange", handleRoute);
   window.addEventListener("popstate", handleRoute);
   window.addEventListener("pageshow", handleRoute);
+  window.addEventListener("resize", handleRoute);
   document.addEventListener("viewshow", handleRoute, true);
 
   // Jellyfin swaps views via DOM replacement, not always via hash events,

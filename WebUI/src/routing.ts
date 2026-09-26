@@ -1,44 +1,62 @@
-// Jellyfin DOM integration: route detection, content host, native page
-// hide/restore, fallback page, header nav entry. No React here — plain DOM
-// so it works even where React doesn't reach (the app header).
+// Jellyfin DOM integration: route detection, overlay mount, fallback page,
+// header nav entry. No React here — plain DOM so it works even where React
+// doesn't reach (the app header).
+//
+// SAFETY MODEL: we never touch Jellyfin's own nodes (no hiding, no inline
+// styles, no attributes on them). Our UI lives in #jfPeopleMount, a
+// fixed-position overlay attached to <body> that sits below the app header
+// and above the bottom nav. Off-route it is a single hidden node, so other
+// pages cannot be affected by us.
 
-import { HASH, MOUNT_ID, PEOPLE_ICON_D, ROOT_ID } from "./constants.js";
+import { HASH, MOUNT_ID, PEOPLE_ICON_D } from "./constants.js";
 
 export const isPeopleRoute = (): boolean => {
   const h = window.location.hash || "";
   return h === HASH || h.startsWith(HASH + "?") || h.startsWith(HASH + "/");
 };
 
-export const findHost = (): Element | null =>
-  document.querySelector(".mainAnimatedPages") ||
-  document.querySelector("main") ||
-  document.querySelector("[role='main']");
-
-export function nativePages(host: Element | null): Element[] {
-  if (!host) {
-    return [];
+/** Creates (or returns) our overlay mount node as a direct child of body. */
+export function ensureOverlayMount(): HTMLElement {
+  let mount = document.getElementById(MOUNT_ID);
+  if (!mount) {
+    mount = document.createElement("div");
+    mount.id = MOUNT_ID;
+    (document.body || document.documentElement).appendChild(mount);
+  } else if (mount.parentElement !== document.body && document.body) {
+    document.body.appendChild(mount);
   }
-  return [...host.children].filter(
-    (n) => n.nodeType === 1 && (n as HTMLElement).id !== ROOT_ID && (n as HTMLElement).id !== MOUNT_ID
-  );
+  return mount as HTMLElement;
 }
 
-export function hideNativePages(host: Element | null): void {
-  nativePages(host).forEach((n) => {
-    const el = n as HTMLElement;
-    if (!el.hasAttribute("data-jf-orig")) {
-      el.setAttribute("data-jf-orig", el.style.display || "");
-    }
-    el.style.display = "none";
-  });
+/**
+ * Fits the overlay between Jellyfin's chrome: below the app header, above
+ * any bottom navigation. Measured live so theme/layout changes can't trap
+ * clicks under (or above) our layer.
+ */
+export function positionOverlay(): void {
+  const mount = document.getElementById(MOUNT_ID);
+  if (!mount) {
+    return;
+  }
+  const el = mount as HTMLElement;
+  const header = document.querySelector("header");
+  const top = header ? Math.max(0, Math.ceil(header.getBoundingClientRect().bottom)) : 0;
+  const bottomNav = document.querySelector(".MuiBottomNavigation-root");
+  const bottom = bottomNav
+    ? Math.max(0, Math.ceil(window.innerHeight - bottomNav.getBoundingClientRect().top))
+    : 0;
+  el.style.top = `${top}px`;
+  el.style.bottom = `${bottom}px`;
 }
 
-export function showAllNativePages(): void {
-  document.querySelectorAll("[data-jf-orig]").forEach((n) => {
-    const el = n as HTMLElement;
-    el.style.display = el.getAttribute("data-jf-orig") || "";
-    el.removeAttribute("data-jf-orig");
-  });
+export function setOverlayVisible(on: boolean): void {
+  const mount = ensureOverlayMount() as HTMLElement;
+  if (on) {
+    positionOverlay();
+    mount.hidden = false;
+  } else {
+    mount.hidden = true;
+  }
 }
 
 // Jellyfin renders #fallbackPage (unknown-route page) for custom hashes

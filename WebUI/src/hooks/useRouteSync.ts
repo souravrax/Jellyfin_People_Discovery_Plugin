@@ -1,17 +1,14 @@
 import { useEffect, useState } from "react";
 import {
-  findHost,
-  hideNativePages,
   isPeopleRoute,
-  showAllNativePages,
+  setOverlayVisible,
   updateFallback,
 } from "../routing.js";
-import { MOUNT_ID } from "../constants.js";
 
 /**
- * Owns #/people visibility: mounts natives-hiding while the route is active,
- * restores everything when leaving. Jellyfin swaps views via DOM replacement
- * (not always via hash events), so a MutationObserver keeps this in sync.
+ * Owns #/people visibility. Jellyfin swaps views via DOM replacement (not
+ * always via hash events), so a MutationObserver keeps this in sync.
+ * Native pages are never touched — our overlay simply shows/hides.
  */
 export function useRouteSync(): boolean {
   const [active, setActive] = useState<boolean>(isPeopleRoute());
@@ -19,26 +16,15 @@ export function useRouteSync(): boolean {
   useEffect(() => {
     const handleRoute = (): void => {
       updateFallback();
-      if (isPeopleRoute()) {
-        const host = findHost();
-        if (!host) {
-          return;
-        }
-        hideNativePages(host);
-        const mount = document.getElementById(MOUNT_ID);
-        if (mount && mount.parentElement !== host) {
-          host.appendChild(mount);
-        }
-        setActive(true);
-      } else {
-        setActive(false);
-        showAllNativePages();
-      }
+      const on = isPeopleRoute();
+      setOverlayVisible(on);
+      setActive(on);
     };
 
     window.addEventListener("hashchange", handleRoute);
     window.addEventListener("popstate", handleRoute);
     window.addEventListener("pageshow", handleRoute);
+    window.addEventListener("resize", handleRoute);
     document.addEventListener("viewshow", handleRoute, true);
     let t: number | undefined;
     const sync = (): void => {
@@ -52,6 +38,7 @@ export function useRouteSync(): boolean {
       window.removeEventListener("hashchange", handleRoute);
       window.removeEventListener("popstate", handleRoute);
       window.removeEventListener("pageshow", handleRoute);
+      window.removeEventListener("resize", handleRoute);
       document.removeEventListener("viewshow", handleRoute, true);
       clearTimeout(t);
       ob.disconnect();

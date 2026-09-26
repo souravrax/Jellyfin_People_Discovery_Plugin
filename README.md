@@ -91,6 +91,12 @@ They take effect on the next page load (hard-refresh the browser).
 
 ## Notes for maintainers
 
+- Safety model (do not regress this): the UI lives in `#jfPeopleMount`, a
+  fixed overlay attached to `<body>`, fitted at runtime between the app
+  header and bottom nav. We **never hide, restyle, or annotate Jellyfin's
+  own nodes** — inline `display:none` on React-managed pages desyncs React
+  and blanks other pages. Off-route we are one hidden node + read-only
+  observers. All custom CSS is scoped to `#peoplePage` / `#jfPeopleMount`.
 - File Transformation integration details that already bit once:
   `fileNamePattern` must be the plain string `index.html` (its matcher does
   not treat `index\.html$` as expected), and the callback **must return the

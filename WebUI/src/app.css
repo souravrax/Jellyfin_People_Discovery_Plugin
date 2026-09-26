@@ -1,11 +1,41 @@
 @tailwind utilities;
 
-/* Bits Tailwind utilities can't express: hidden-attribute guard (MUI sets
-   display:block, which beats the UA [hidden] rule), plus grid density vars
-   for Jellyfin's native itemsContainer. Everything else is utilities in JSX. */
+/* Bits Tailwind utilities can't express. Everything is scoped to OUR nodes
+   (#peoplePage, #jfPeopleMount) — nothing here can restyle Jellyfin itself. */
 #peoplePage [data-typemenu][hidden],
 #peoplePage [data-filterbar][hidden] {
   display: none !important;
+}
+
+/* Body-level overlay: opaque layer below the app header, above bottom nav
+   (exact top/bottom offsets are measured at runtime). Native pages are never
+   hidden or modified — this layer simply covers them while active. */
+#jfPeopleMount {
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: #141414;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+#jfPeopleMount[hidden] {
+  display: none !important;
+}
+
+#jfPeopleGrid {
+  --jf-card-min: 145px;
+}
+
+#peoplePage.jfCompact #jfPeopleGrid {
+  --jf-card-min: 105px;
+}
+
+@media (max-width: 700px) {
+  #jfPeopleGrid {
+    --jf-card-min: 105px;
+  }
 }
 
 #jfPeopleGrid {

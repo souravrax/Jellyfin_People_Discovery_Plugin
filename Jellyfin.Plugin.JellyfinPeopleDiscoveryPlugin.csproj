@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Jellyfin.Plugin.JellyfinPeopleDiscoveryPlugin</RootNamespace>
+    <AssemblyName>Jellyfin.Plugin.JellyfinPeopleDiscoveryPlugin</AssemblyName>
+    <Version>1.0.0.0</Version>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!--
+      Jellyfin 12: server targets .NET 10, plugin NuGets are 12.0.0.
+      Keep this equal to your server version (Dashboard > About).
+    -->
+    <JellyfinVersion>12.0.0</JellyfinVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      v12 renamed the old MediaBrowser.* packages (Jellyfin.Common etc.
+      arrive transitively). Do NOT add MediaBrowser.* references back —
+      those IDs no longer exist on NuGet.
+    -->
+    <PackageReference Include="Jellyfin.Controller" Version="$(JellyfinVersion)" />
+    <PackageReference Include="Jellyfin.Model" Version="$(JellyfinVersion)" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <!--
+    Browser UI: the React bundle built from WebUI/ (`npm run build`).
+    dist/ is committed so the DLL builds straight from git. If dist/ is
+    ever missing, the Exists() guard skips it and the plugin falls back
+    to the hand-written scripts in Web/, which stay embedded too so
+    injection never silently stops working.
+  -->
+  <ItemGroup>
+    <EmbeddedResource Include="WebUI\dist\people.bundle.js" Link="Web\people.bundle.js" Condition="Exists('WebUI\dist\people.bundle.js')" />
+    <EmbeddedResource Include="Web\jf-people-page.js" />
+    <EmbeddedResource Include="Web\jf-people-route.js" />
+  </ItemGroup>
+
+</Project>

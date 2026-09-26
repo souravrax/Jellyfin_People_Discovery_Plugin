@@ -1,0 +1,17 @@
+{
+  "name": "jellyfin-people-discovery-ui",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/app.jsx --bundle --minify --format=iife --jsx=automatic --outfile=dist/people.bundle.js",
+    "watch": "esbuild src/app.jsx --bundle --format=iife --jsx=automatic --outfile=dist/people.bundle.js --watch"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  }
+}

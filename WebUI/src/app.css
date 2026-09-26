@@ -1,7 +1,17 @@
-@tailwind utilities;
+@theme {
+  --color-netflix: #e50914;
+  --color-ink: #141414;
+  --font-sans: Inter, "Netflix Sans", "Helvetica Neue", Arial, sans-serif;
+}
 
-/* Bits Tailwind utilities can't express. Everything is scoped to OUR nodes
-   (#peoplePage, #jfPeopleMount) — nothing here can restyle Jellyfin itself. */
+/* All utilities scoped under our root so nothing can restyle Jellyfin.
+   No preflight import: Jellyfin's own reset stays untouched. */
+#peoplePage {
+  @import "tailwindcss/utilities";
+}
+
+/* Bits utilities can't express. Everything scoped to OUR nodes
+   (#peoplePage, #jfPeopleMount). */
 #peoplePage [data-typemenu][hidden],
 #peoplePage [data-filterbar][hidden] {
   display: none !important;
@@ -22,20 +32,6 @@
 
 #jfPeopleMount[hidden] {
   display: none !important;
-}
-
-#jfPeopleGrid {
-  --jf-card-min: 145px;
-}
-
-#peoplePage.jfCompact #jfPeopleGrid {
-  --jf-card-min: 105px;
-}
-
-@media (max-width: 700px) {
-  #jfPeopleGrid {
-    --jf-card-min: 105px;
-  }
 }
 
 #jfPeopleGrid {

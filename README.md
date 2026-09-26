@@ -39,12 +39,12 @@ JellyfinPeopleDiscoveryPlugin/
 1. Jellyfin server 12 (`JellyfinVersion` in the `.csproj` tracks Dashboard > About).
 2. **File Transformation** plugin installed
    (https://github.com/IAmParadox27/jellyfin-plugin-file-transformation).
-3. Node 24 + pnpm 10 to rebuild the front end (TypeScript + Tailwind v3).
+3. Node 24 + pnpm 10 to rebuild the front end (TypeScript + Tailwind v4).
 4. .NET 10 SDK to rebuild the DLL.
 
-Styling: Tailwind utilities scoped under `#peoplePage` (`important` selector,
-preflight disabled so Jellyfin's own CSS is untouched). Run `pnpm run
-typecheck` for the TS check.
+Styling: Tailwind v4, CSS-first config in `app.css` (`@theme` tokens, utilities
+nested under `#peoplePage` so nothing leaks; no preflight import so
+Jellyfin's own CSS is untouched). Run `pnpm run typecheck` for the TS check.
 
 ## Build
 

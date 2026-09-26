@@ -10,6 +10,9 @@ node_modules/
 # Built front-end bundle (rebuild with: npm --prefix WebUI run build)
 WebUI/dist/
 
+# Generated stylesheet bundle (rebuilt by pnpm run build)
+WebUI/src/__generated.css
+
 # OS / editors
 .DS_Store
 Thumbs.db

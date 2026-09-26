@@ -14,27 +14,31 @@ interface PeopleHeaderProps {
   onToggleSort: () => void;
 }
 
-/** The whole header: title, count, search, type, sort. Nothing else. */
+/**
+ * Masthead + one control strip. The single memorable touch is the velvet
+ * rule under the title; everything else stays quiet and disciplined.
+ */
 export function PeopleHeader(props: PeopleHeaderProps) {
   const { input, personType, sortOrder, total } = props;
   return (
-    <div className="px-4 pb-1 pt-4">
-      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h1 className="font-heading text-2xl font-bold tracking-wide text-foreground">People</h1>
-        {typeof total === "number" ? (
-          <p className="text-sm text-muted-foreground">
+    <div className="px-4 pb-1 pt-5 md:px-6">
+      <h1 className="font-heading text-[2rem] font-extrabold leading-none tracking-tight text-foreground">
+        People
+      </h1>
+      <div className="mt-2.5 h-0.5 w-16 rounded-full bg-[#e50914]" aria-hidden="true"></div>
+      {typeof total === "number" ? (
+        <p className="mt-2 text-sm tabular-nums text-muted-foreground">
             {total.toLocaleString()} {total === 1 ? "person" : "people"}
-          </p>
-        ) : null}
-      </div>
-      <div className="mt-3 flex flex-wrap items-center gap-2.5">
+        </p>
+      ) : null}
+      <div className="mt-4 flex max-w-3xl flex-wrap items-center gap-2.5">
         <Input
           id={SEARCH_ID}
-          className="max-w-md grow basis-64"
+          className="grow basis-64"
           type="search"
-          placeholder="Search people"
+          placeholder="Search cast and crew"
           autoComplete="off"
-          aria-label="Search people"
+          aria-label="Search cast and crew"
           value={input}
           onChange={(e) => props.onInput(e.target.value)}
         />
@@ -46,7 +50,7 @@ export function PeopleHeader(props: PeopleHeaderProps) {
         />
         <Button
           variant="secondary"
-          title={sortOrder === "Ascending" ? "Sort descending" : "Sort ascending"}
+          title={sortOrder === "Ascending" ? "Sort Z to A" : "Sort A to Z"}
           onClick={props.onToggleSort}
         >
           {sortOrder === "Ascending" ? "A–Z" : "Z–A"}

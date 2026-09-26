@@ -96,7 +96,6 @@ public static class StartupRegistration
 public static class PeoplePageTransform
 {
     private const string BundleResource = "people.bundle.js";
-    private const string BundleCssResource = "people.bundle.css";
 
     /// <summary>
     /// MUST return the raw new file contents as a string (or null to leave
@@ -132,8 +131,9 @@ public static class PeoplePageTransform
                 return contents;
             }
 
-            // Single implementation: the React + Tailwind bundle. Without it
-            // there is nothing to inject — leave the file untouched.
+            // Single file: the React + Tailwind bundle, which carries its own
+            // stylesheet into the shadow root. Without it there is nothing
+            // to inject — leave the file untouched.
             var bundle = LoadScript(BundleResource);
             if (string.IsNullOrEmpty(bundle))
             {
@@ -141,11 +141,7 @@ public static class PeoplePageTransform
             }
 
             bundle = bundle.Replace("</script", "<\\/script", StringComparison.Ordinal);
-            var css = LoadScript(BundleCssResource);
-            var style = string.IsNullOrEmpty(css)
-                ? string.Empty
-                : "<style>" + css.Replace("</style", "<\\/style", StringComparison.Ordinal) + "</style>\n";
-            var tags = style + "<script>" + bundle + "</script>\n</body>";
+            var tags = "<script>" + bundle + "</script>\n</body>";
 
             return contents.Contains("</body>", StringComparison.Ordinal)
                 ? contents.Replace("</body>", tags, StringComparison.Ordinal)

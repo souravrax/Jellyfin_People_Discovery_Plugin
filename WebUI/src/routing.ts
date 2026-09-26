@@ -15,17 +15,19 @@ export const isPeopleRoute = (): boolean => {
   return h === HASH || h.startsWith(HASH + "?") || h.startsWith(HASH + "/");
 };
 
-/** Creates (or returns) our overlay mount node as a direct child of body. */
-export function ensureOverlayMount(): HTMLElement {
-  let mount = document.getElementById(MOUNT_ID);
+export function setOverlayVisible(on: boolean): void {
+  // The mount node is owned by bootstrap (which also builds the shadow
+  // root); if it isn't there yet there is nothing to show or hide.
+  const mount = document.getElementById(MOUNT_ID) as HTMLElement | null;
   if (!mount) {
-    mount = document.createElement("div");
-    mount.id = MOUNT_ID;
-    (document.body || document.documentElement).appendChild(mount);
-  } else if (mount.parentElement !== document.body && document.body) {
-    document.body.appendChild(mount);
+    return;
   }
-  return mount as HTMLElement;
+  if (on) {
+    positionOverlay();
+    mount.hidden = false;
+  } else {
+    mount.hidden = true;
+  }
 }
 
 /**
@@ -47,16 +49,6 @@ export function positionOverlay(): void {
     : 0;
   el.style.top = `${top}px`;
   el.style.bottom = `${bottom}px`;
-}
-
-export function setOverlayVisible(on: boolean): void {
-  const mount = ensureOverlayMount() as HTMLElement;
-  if (on) {
-    positionOverlay();
-    mount.hidden = false;
-  } else {
-    mount.hidden = true;
-  }
 }
 
 // Jellyfin renders #fallbackPage (unknown-route page) for custom hashes

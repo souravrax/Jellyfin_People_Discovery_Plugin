@@ -46,7 +46,7 @@ export function App() {
           sentinelRef={sentinelRef}
           onLoadMore={loadMore}
         />
-        <StatusBar loading={loading} error={error} onRetry={reset} />
+        <StatusBar error={error} onRetry={reset} />
       </div>
     </div>
   );

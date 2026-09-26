@@ -12,6 +12,16 @@ interface PeopleGridProps {
   onLoadMore: () => void;
 }
 
+/** Shimmer portrait placeholder — the one orchestrated loading moment. */
+function SkeletonCard() {
+  return (
+    <div aria-hidden="true">
+      <div className="aspect-[2/3] animate-pulse rounded-md bg-white/[0.07]"></div>
+      <div className="mx-auto mt-2.5 h-3.5 w-3/4 animate-pulse rounded bg-white/[0.07]"></div>
+    </div>
+  );
+}
+
 /** Native itemsContainer grid + empty state + infinite-scroll sentinel. */
 export function PeopleGrid({ items, loading, error, active, sentinelRef, onLoadMore }: PeopleGridProps) {
   useEffect(() => {
@@ -34,16 +44,25 @@ export function PeopleGrid({ items, loading, error, active, sentinelRef, onLoadM
     return () => ob.disconnect();
   }, [active, onLoadMore, sentinelRef]);
 
+  const showSkeletons = loading && items.length === 0;
+
   return (
     <>
       <div className="itemsContainer padded-left padded-right vertical-wrap MuiBox-root css-0" id={GRID_ID}>
-        {items.length === 0 && !loading && !error ? (
+        {showSkeletons ? (
+          Array.from({ length: 12 }, (_, i) => <SkeletonCard key={i} />)
+        ) : items.length === 0 && !error ? (
           <div className="noItemsMessage centerMessage MuiBox-root css-0">
-            <h1 className="MuiTypography-root MuiTypography-h1">Nothing here.</h1>
-            <p className="MuiTypography-root MuiTypography-body1">No people found.</p>
+            <h1 className="MuiTypography-root MuiTypography-h1">Nobody here</h1>
+            <p className="MuiTypography-root MuiTypography-body1">Try a different search.</p>
           </div>
         ) : (
-          items.map((p) => <PersonCard key={`${p.Id}-${p.PersonType || ""}`} person={p} />)
+          <>
+            {items.map((p) => <PersonCard key={`${p.Id}-${p.PersonType || ""}`} person={p} />)}
+            {loading
+              ? Array.from({ length: 4 }, (_, i) => <SkeletonCard key={`more-${i}`} />)
+              : null}
+          </>
         )}
       </div>
       <div id="jfPeopleSentinel" ref={sentinelRef} className="h-px w-full"></div>

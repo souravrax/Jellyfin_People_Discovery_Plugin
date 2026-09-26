@@ -29,10 +29,10 @@
     Browser UI: the React + Tailwind bundle built from WebUI/
     (`pnpm run build`). dist/ is git-ignored, so a fresh checkout must
     build WebUI first — the DLL embeds whatever dist/ contains.
+    Styles ride INSIDE the bundle (shadow root), so only the .js is embedded.
   -->
   <ItemGroup>
     <EmbeddedResource Include="WebUI\dist\people.bundle.js" Link="Web\people.bundle.js" />
-    <EmbeddedResource Include="WebUI\dist\people.bundle.css" Link="Web\people.bundle.css" />
   </ItemGroup>
 
 </Project>

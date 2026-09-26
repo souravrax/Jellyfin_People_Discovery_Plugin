@@ -79,11 +79,10 @@ Server log should show:
 
 ## Updating the injected JS without rebuilding the DLL
 
-Drop edited copies here (bundle + CSS):
+Drop an edited bundle here:
 
 ```text
 <jellyfin-data>/plugins-data/People Discovery/people.bundle.js
-<jellyfin-data>/plugins-data/People Discovery/people.bundle.css
 ```
 
 They take effect on the next page load (hard-refresh the browser).

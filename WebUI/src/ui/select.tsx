@@ -1,5 +1,6 @@
 import React from "react";
 import { Select as BaseSelect } from "@base-ui/react/select";
+import { getPortalContainer } from "../portal.js";
 import { cn } from "./cn.js";
 
 export interface SelectOption {
@@ -35,7 +36,7 @@ export function Select({ value, options, onChange, label, className }: SelectPro
           </svg>
         </BaseSelect.Icon>
       </BaseSelect.Trigger>
-      <BaseSelect.Portal>
+      <BaseSelect.Portal container={getPortalContainer()}>
         <BaseSelect.Backdrop className="bg-black/60" />
         <BaseSelect.Positioner className="z-[1400] outline-none" sideOffset={6}>
           <BaseSelect.Popup className="min-w-40 rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md outline-none">

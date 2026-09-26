@@ -4,9 +4,10 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "esbuild src/main.tsx --bundle --minify --format=iife --jsx=automatic --outfile=dist/people.bundle.js && postcss src/app.css --use @tailwindcss/postcss --no-map -o dist/people.bundle.css",
+    "build:css": "postcss src/app.css --use @tailwindcss/postcss --no-map -o src/__generated.css",
+    "build": "pnpm run build:css && esbuild src/main.tsx --bundle --minify --format=iife --jsx=automatic --loader:.css=text --outfile=dist/people.bundle.js",
     "typecheck": "tsc --noEmit",
-    "watch": "esbuild src/main.tsx --bundle --format=iife --jsx=automatic --outfile=dist/people.bundle.js --watch"
+    "watch": "esbuild src/main.tsx --bundle --format=iife --jsx=automatic --loader:.css=text --outfile=dist/people.bundle.js --watch"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

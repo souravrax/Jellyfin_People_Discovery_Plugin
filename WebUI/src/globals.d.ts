@@ -5,3 +5,9 @@ interface Window {
   JFPeoplePage?: { rootId?: string };
   __JF_PEOPLE_BUNDLE__?: boolean;
 }
+
+// Processed stylesheet imported as text (esbuild --loader:.css=text).
+declare module "*.css" {
+  const content: string;
+  export default content;
+}

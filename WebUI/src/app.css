@@ -73,13 +73,3 @@
   min-height: 100%;
   font-family: var(--font-sans);
 }
-
-#jfPeopleGrid {
-  --jf-card-min: 145px;
-}
-
-@media (max-width: 700px) {
-  #jfPeopleGrid {
-    --jf-card-min: 105px;
-  }
-}

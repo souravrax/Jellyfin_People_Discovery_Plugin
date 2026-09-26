@@ -1,5 +1,4 @@
 import React from "react";
-import { Input as BaseInput } from "@base-ui/react/input";
 import { cn } from "./cn.js";
 
 export type InputSize = "sm" | "default" | "lg";
@@ -14,10 +13,10 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   inputSize?: InputSize;
 }
 
-/** coss-style Input (Base UI under the hood), on coss dark tokens. */
+/** coss-style Input. Plain element — renders inline, shadow-safe. */
 export function Input({ inputSize = "default", className, ...props }: InputProps) {
   return (
-    <BaseInput
+    <input
       className={cn(
         "w-full rounded-md border border-input bg-background text-sm text-foreground shadow-xs transition-colors outline-none",
         "placeholder:text-muted-foreground",

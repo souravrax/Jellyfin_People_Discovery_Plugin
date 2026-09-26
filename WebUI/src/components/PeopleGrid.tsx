@@ -22,7 +22,7 @@ function SkeletonCard() {
   );
 }
 
-/** Native itemsContainer grid + empty state + infinite-scroll sentinel. */
+/** Our own responsive grid + empty state + infinite-scroll sentinel. */
 export function PeopleGrid({ items, loading, error, active, sentinelRef, onLoadMore }: PeopleGridProps) {
   useEffect(() => {
     if (!active) {
@@ -48,13 +48,13 @@ export function PeopleGrid({ items, loading, error, active, sentinelRef, onLoadM
 
   return (
     <>
-      <div className="itemsContainer padded-left padded-right vertical-wrap MuiBox-root css-0" id={GRID_ID}>
+      <div id={GRID_ID} className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] items-start gap-x-4 gap-y-7 px-4 pb-16 pt-2 md:px-6 max-md:grid-cols-[repeat(auto-fill,minmax(110px,1fr))] max-md:gap-x-3 max-md:gap-y-5">
         {showSkeletons ? (
           Array.from({ length: 12 }, (_, i) => <SkeletonCard key={i} />)
         ) : items.length === 0 && !error ? (
-          <div className="noItemsMessage centerMessage MuiBox-root css-0">
-            <h1 className="MuiTypography-root MuiTypography-h1">Nobody here</h1>
-            <p className="MuiTypography-root MuiTypography-body1">Try a different search.</p>
+          <div className="col-span-full px-4 py-20 text-center">
+            <p className="font-heading text-xl font-bold text-foreground">Nobody here</p>
+            <p className="mt-2 text-sm text-muted-foreground">Try a different search.</p>
           </div>
         ) : (
           <>

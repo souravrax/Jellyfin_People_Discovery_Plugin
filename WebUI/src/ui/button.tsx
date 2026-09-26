@@ -1,5 +1,4 @@
 import React from "react";
-import { Button as BaseButton } from "@base-ui/react/button";
 import { cn } from "./cn.js";
 
 export type ButtonVariant = "default" | "secondary" | "outline" | "ghost";
@@ -42,8 +41,8 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 
 /**
- * coss-style Button (Base UI under the hood): variants, sizes, loading state.
- * Colors come from the coss dark tokens (bg-primary, bg-secondary …).
+ * coss-style Button. Plain element, zero dependencies — renders inline,
+ * so it can never escape the shadow root or depend on outside styles.
  */
 export function Button({
   variant = "default",
@@ -52,10 +51,12 @@ export function Button({
   disabled,
   className,
   children,
+  type = "button",
   ...props
 }: ButtonProps) {
   return (
-    <BaseButton
+    <button
+      type={type}
       disabled={disabled || loading}
       aria-disabled={disabled || loading}
       data-loading={loading || undefined}
@@ -63,7 +64,6 @@ export function Button({
         "inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors outline-none",
         "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
         "disabled:pointer-events-none disabled:opacity-50",
-        "[&_svg]:pointer-events-none [&_svg]:shrink-0",
         variants[variant],
         sizes[size],
         className
@@ -72,6 +72,6 @@ export function Button({
     >
       {loading ? <Spinner className="size-4" /> : null}
       <span className={loading ? "invisible" : undefined}>{children}</span>
-    </BaseButton>
+    </button>
   );
 }
